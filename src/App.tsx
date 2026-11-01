@@ -23,7 +23,6 @@ function App() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [selectedBook, setSelectedBook] = useState<BookId | null>(null)
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser)
@@ -56,13 +55,6 @@ function App() {
   function returnToBooks() {
     setSelectedBook(null)
     setSelectedExercise(null)
-  }
-
-  const answer = selectedExercise ? answers[selectedExercise.id] ?? '' : ''
-
-  function updateAnswer(value: string) {
-    if (!selectedExercise) return
-    setAnswers((current) => ({ ...current, [selectedExercise.id]: value }))
   }
 
   if (!authReady) {
@@ -215,9 +207,9 @@ function App() {
 
           {selectedExercise && (
             <ExerciseWorkspace
+              key={`${user.uid}:${selectedExercise.id}`}
+              userId={user.uid}
               exercise={selectedExercise}
-              answer={answer}
-              onAnswerChange={updateAnswer}
             />
           )}
         </section>

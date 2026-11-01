@@ -1,7 +1,7 @@
 # Algebraic Geometry Grinder
 
-A single-page React app for practising algebraic geometry. The app currently
-opens directly to the workspace while authentication is being prototyped.
+A single-page React app for practising algebraic geometry. Visitors see the
+landing page and can sign in to access the exercise workspace.
 
 ## Development
 
@@ -46,6 +46,27 @@ filenames use underscores to separate the exercise number (for example
 directly (for example `A.tex` displays as exercise `A`). Chapter, section, and
 exercise selectors are populated from the available files.
 
-The answer editor renders LaTeX live with KaTeX. Answers currently remain in
-memory only and are not saved to a database. The workspace is shown without
-requiring authentication during this UI prototype.
+The answer editor accepts prose with inline `$...$` and display `$$...$$`
+math, rendered live with KaTeX. An authenticated user's answers are stored in
+Firestore at `users/{uid}/exercises/{exerciseId}`, where `exerciseId` is the
+URL-encoded exercise source path relative to `src/exercises`.
+
+Each document contains `answer`, `bookId`, `chapter`, `section`,
+`exerciseLabel`, and `updatedAt`. The app creates a document with an empty
+answer the first time an exercise is opened, then saves edits after three
+seconds without typing. Saves compare the stored answer to the version loaded
+in the current session. If another session has changed it, the user can choose
+the saved version or keep their local version; choosing local performs another
+transactional comparison before overwriting.
+
+Deploy the owner-scoped Firestore rules in `firestore.rules` before using the
+database in a deployed app:
+
+```sh
+npx firebase-tools deploy --only firestore:rules
+```
+
+The rules allow only authenticated users to access their own answer documents,
+validate the document shape and answer size, prevent exercise metadata changes,
+and deny all other reads, writes, and deletes. Review the rules for your
+production needs before deployment.

@@ -2,6 +2,79 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Answer documents live at users/{uid}/exercises/{exerciseId}. The parent
+    // user document is intentionally not required or readable by this app.
+    // Each answer contains only exercise metadata, the user's answer, and a
+    // server timestamp; all fields are private to the owning authenticated UID.
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(data) {
+      return data.keys().hasAll([
+        'answer',
+        'bookId',
+        'chapter',
+        'section',
+        'exerciseLabel',
+        'updatedAt'
+      ]);
+    }
+
+    function hasOnlyAllowedFields(data) {
+      return data.keys().hasOnly([
+        'answer',
+        'bookId',
+        'chapter',
+        'section',
+        'exerciseLabel',
+        'updatedAt'
+      ]);
+    }
+
+    function isValidAnswerDocument(data) {
+      return hasRequiredFields(data)
+        && hasOnlyAllowedFields(data)
+        && data.answer is string
+        && data.answer.size() <= 150000
+        && data.bookId in ['hartshorne', 'vakil']
+        && data.chapter is string
+        && data.chapter.size() > 0
+        && data.chapter.size() <= 20
+        && data.section is string
+        && data.section.size() > 0
+        && data.section.size() <= 40
+        && data.exerciseLabel is string
+        && data.exerciseLabel.size() > 0
+        && data.exerciseLabel.size() <= 100
+        && data.updatedAt is timestamp
+        && data.updatedAt == request.time;
+    }
+
+    function exerciseIdentityUnchanged() {
+      return request.resource.data.bookId == resource.data.bookId
+        && request.resource.data.chapter == resource.data.chapter
+        && request.resource.data.section == resource.data.section
+        && request.resource.data.exerciseLabel == resource.data.exerciseLabel;
+    }
+
+    match /users/{userId}/exercises/{exerciseId} {
+      allow read: if isOwner(userId);
+
+      allow create: if isOwner(userId)
+        && isValidAnswerDocument(request.resource.data);
+
+      allow update: if isOwner(userId)
+        && isValidAnswerDocument(request.resource.data)
+        && exerciseIdentityUnchanged();
+
+      allow delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
