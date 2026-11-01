@@ -15,7 +15,7 @@ function renderMath(expression: string, displayMode: boolean) {
 }
 
 export function LatexText({ source, displayMode = false }: LatexTextProps) {
-  const mathPattern = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+\$)/g
+  const mathPattern = /(\$\$[\s\S]+?\$\$|\$(?!\$)[^$\n]+\$)/g
   const parts = source.split(mathPattern)
 
   return (
@@ -28,12 +28,8 @@ export function LatexText({ source, displayMode = false }: LatexTextProps) {
           return <span key={index}>{part.replace(/^\*\(/, '(')}</span>
         }
 
-        const isDisplay = part.startsWith('$$') || part.startsWith('\\[')
-        const expression = isDisplay
-          ? part.slice(2, -2)
-          : part.startsWith('\\(')
-            ? part.slice(2, -2)
-            : part.slice(1, -1)
+        const isDisplay = part.startsWith('$$')
+        const expression = isDisplay ? part.slice(2, -2) : part.slice(1, -1)
 
         return (
           <span

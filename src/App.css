@@ -611,7 +611,13 @@ hr {
 
 .exercise-statement {
   margin: 0 0 12px;
+  font-family: KaTeX_Main, 'Times New Roman', serif;
   line-height: 1.65;
+}
+
+.exercise-statement .katex,
+.latex-answer .katex {
+  font-size: 1em;
 }
 
 .exercise-display-math {
@@ -668,7 +674,7 @@ hr {
   border-radius: 0;
   background: #fff;
   color: var(--ink);
-  font-family: 'Fira Mono', Consolas, monospace;
+  font-family: 'Fira Code', Consolas, monospace;
   font-size: 14px;
   line-height: 1.65;
   tab-size: 2;
@@ -693,6 +699,15 @@ hr {
 .latex-answer {
   overflow: auto;
   background: #fff;
+  font-family: KaTeX_Main, 'Times New Roman', serif;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.latex-answer .exercise-display-math {
+  display: block;
+  padding: 5px 0;
+  overflow-x: auto;
 }
 
 .latex-answer .katex-display {
