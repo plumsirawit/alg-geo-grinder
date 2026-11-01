@@ -615,6 +615,15 @@ hr {
   line-height: 1.65;
 }
 
+.exercise-source {
+  margin: 16px 0 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .exercise-statement .katex,
 .latex-answer .katex {
   font-size: 1em;

@@ -109,7 +109,9 @@ function App() {
         </section>
 
         <footer className="page-footer">
-          Made for curious minds. Built with grit and perseverance.
+          A noncommercial educational project. Made for curious minds. Built with grit and perseverance.
+          <br />
+          Exercise sources and rights notices appear alongside each statement.
         </footer>
 
         {isAuthOpen && <AuthModal onClose={() => setIsAuthOpen(false)} />}
@@ -216,7 +218,9 @@ function App() {
       )}
 
       <footer className="page-footer">
-        Made for curious minds. Built with grit and perseverance.
+        A noncommercial educational project. Made for curious minds. Built with grit and perseverance.
+        <br />
+        Exercise sources and rights notices appear alongside each statement.
       </footer>
     </main>
   )

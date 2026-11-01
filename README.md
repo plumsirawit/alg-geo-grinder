@@ -51,6 +51,22 @@ math, rendered live with KaTeX. An authenticated user's answers are stored in
 Firestore at `users/{uid}/exercises/{exerciseId}`, where `exerciseId` is the
 URL-encoded exercise source path relative to `src/exercises`.
 
+## Exercise sources and rights
+
+The app is intended to remain noncommercial. Source and rights information is
+shown next to each exercise statement, rather than relying only on a site-wide
+footer.
+
+Vakil exercise statements are attributed to Ravi Vakil's *The Rising Sea:
+Foundations of Algebraic Geometry* notes, with a link to the cited notes version
+and the CC BY-NC-ND 3.0 license. The statements are presented as unmodified
+text. This license permits noncommercial sharing subject to its terms; it does
+not permit distributing modified material.
+
+Hartshorne exercise statements are identified by their book and exercise
+reference. This project reproduces selected exercise statements only, not the
+book's explanatory text, and does so for noncommercial educational purposes.
+
 Each document contains `answer`, `bookId`, `chapter`, `section`,
 `exerciseLabel`, and `updatedAt`. The app creates a document with an empty
 answer the first time an exercise is opened, then saves edits after three

@@ -35,6 +35,27 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
             <LatexText source={paragraph.trim()} />
           </p>
         ))}
+        {exercise.bookId === 'vakil' ? (
+          <p className="exercise-source">
+            Source: Ravi Vakil, <cite>The Rising Sea: Foundations of Algebraic Geometry</cite>,
+            {' '}Exercise {exercise.chapter}.{exercise.section}.{exercise.label};
+            {' '}<a href="https://virtualmath1.stanford.edu/~vakil/216blog/" rel="noreferrer" target="_blank">
+              October 21, 2025 notes
+            </a>.
+            {' '}The exercise text is reproduced without modification for noncommercial use
+            under the{' '}
+            <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="noreferrer" target="_blank">
+              CC BY-NC-ND 3.0 License
+            </a>.
+          </p>
+        ) : (
+          <p className="exercise-source">
+            Source: Robin Hartshorne, <cite>Algebraic Geometry</cite>, Chapter {exercise.chapter},
+            {' '}§{exercise.section}, Exercise {exercise.label}. This noncommercial educational
+            project reproduces selected exercise statements only, not the book&apos;s explanatory
+            text, and displays the statements without modification.
+          </p>
+        )}
       </div>
 
       <div className="answer-workspace">
