@@ -1,7 +1,7 @@
 # Algebraic Geometry Grinder
 
-A single-page React app for practising algebraic geometry. Signed-out visitors
-see the landing page; signed-in users see their workspace.
+A single-page React app for practising algebraic geometry. The app currently
+opens directly to the workspace while authentication is being prototyped.
 
 ## Development
 
@@ -31,6 +31,21 @@ using the callback URL shown by Firebase, and add local and deployed app
 domains under **Authentication → Settings → Authorized domains**. Provider
 client secrets belong in the Firebase Console, never in this repository.
 
-The login dialog supports email/password account creation and sign-in, plus
-Google and GitHub popup sign-in. The dashboard currently provides the layout
-and empty states; problem sets and progress tracking are not implemented yet.
+## Exercise workspace
+
+Exercise content is loaded from `src/exercises` at build time. Add `.tex` files
+using this directory structure:
+
+```text
+src/exercises/<book>/<chapter>/<section>/<exercise>.tex
+```
+
+The book directory must be `hartshorne` or `vakil`. Hartshorne exercise
+filenames use underscores to separate the exercise number (for example
+`1_1.tex` displays as exercise `1.1`). Vakil exercise filenames are shown
+directly (for example `A.tex` displays as exercise `A`). Chapter, section, and
+exercise selectors are populated from the available files.
+
+The answer editor renders LaTeX live with KaTeX. Answers currently remain in
+memory only and are not saved to a database. The workspace is shown without
+requiring authentication during this UI prototype.
