@@ -1,35 +1,36 @@
-# React + TypeScript + Vite
+# Algebraic Geometry Grinder
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A single-page React app for practising algebraic geometry. Signed-out visitors
+see the landing page; signed-in users see their workspace.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Check the frontend before deploying:
+
+```sh
+npm run lint
+npm run build
+```
+
+The production build is written to `dist`, which is the Firebase Hosting public
+directory.
+
+## Firebase Authentication
+
+The Firebase web app configuration is in `src/firebase.ts`. It is public client
+configuration, not a server credential.
+
+In Firebase Console, enable Email/Password, Google, and GitHub under
+**Authentication → Sign-in method**. Configure the GitHub OAuth application
+using the callback URL shown by Firebase, and add local and deployed app
+domains under **Authentication → Settings → Authorized domains**. Provider
+client secrets belong in the Firebase Console, never in this repository.
+
+The login dialog supports email/password account creation and sign-in, plus
+Google and GitHub popup sign-in. The dashboard currently provides the layout
+and empty states; problem sets and progress tracking are not implemented yet.
