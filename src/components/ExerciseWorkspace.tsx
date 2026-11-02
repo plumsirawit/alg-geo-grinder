@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { LatexText } from './LatexText'
 import { useExerciseAnswer } from '../hooks/useExerciseAnswer'
+import { gradeExercise } from '../services/gradeExercise'
 import type { Exercise } from '../exercises'
 
 interface ExerciseWorkspaceProps {
@@ -11,6 +13,7 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
   const {
     answer,
     conflict,
+    gradeResult,
     isDisabled,
     loadError,
     loadStatus,
@@ -19,9 +22,42 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
     saveError,
     saveStatus,
     updateAnswer,
+    updateGradeResult,
     useRemoteAnswer,
     keepLocalAnswer,
   } = useExerciseAnswer(userId, exercise)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const canSubmit = loadStatus === 'ready'
+    && saveStatus === 'saved'
+    && answer.trim().length > 0
+    && conflict === null
+    && !isSubmitting
+
+  function handleAnswerChange(nextAnswer: string) {
+    updateAnswer(nextAnswer)
+    setSubmitError('')
+  }
+
+  async function handleSubmit() {
+    if (!canSubmit) return
+
+    setIsSubmitting(true)
+    setSubmitError('')
+    try {
+      const exerciseId = exercise.id.replace(/^\.\/exercises\//, '')
+      const result = await gradeExercise(exerciseId)
+      updateGradeResult(result)
+    } catch (error) {
+      console.error('Unable to submit exercise answer:', error)
+      setSubmitError(
+        error instanceof Error ? error.message : 'An unexpected error occurred.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <section className="exercise-workspace" aria-labelledby="exercise-heading">
@@ -70,8 +106,8 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
             autoCorrect="off"
             spellCheck={false}
             value={answer}
-            onChange={(event) => updateAnswer(event.target.value)}
-            disabled={isDisabled}
+            onChange={(event) => handleAnswerChange(event.target.value)}
+            disabled={isDisabled || isSubmitting}
             placeholder={'Write your solution here…\n\nUse $...$ for inline math and $$...$$ for display math.\n\nFor example:\nLet $X = \\operatorname{Spec}(A)$. Then:\n$$A \\cong k[x, y]/(y - x^2).$$'}
           />
           <div className="answer-status" role="status" aria-live="polite">
@@ -99,6 +135,45 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
             ? <div className="latex-answer"><LatexText source={answer} /></div>
             : <p className="preview-placeholder">Your rendered answer will appear here.</p>}
         </section>
+      </div>
+      <div className="grading-panel">
+        <div className="grading-controls">
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => void handleSubmit()}
+            disabled={!canSubmit}
+          >
+            {isSubmitting ? 'Submitting…' : 'Submit for grading'}
+          </button>
+          <p className="grading-status" role="status" aria-live="polite">
+            {loadStatus === 'loading' && 'Load your saved answer before submitting.'}
+            {loadStatus === 'ready' && saveStatus === 'pending' && 'Wait for your answer to save before submitting.'}
+            {loadStatus === 'ready' && saveStatus === 'saving' && 'Your answer is saving; submission is unavailable.'}
+            {loadStatus === 'ready' && saveStatus === 'error' && 'Resolve the save error before submitting.'}
+            {loadStatus === 'ready' && saveStatus === 'saved' && !answer.trim() && 'Write an answer before submitting.'}
+            {isSubmitting && 'The grader is checking the saved answer.'}
+          </p>
+        </div>
+        <p className="grading-disclosure">
+          Submitting sends this exercise statement and your saved answer to
+          OpenAI for AI grading. The result may be mistaken.
+        </p>
+        {submitError && <p className="notice-error" role="alert">{submitError}</p>}
+        {gradeResult && (
+          <section
+            className={`grading-result grading-result-${gradeResult.verdict}`}
+            aria-live="polite"
+            aria-label="Grading result"
+          >
+            <h3>
+              {gradeResult.gradingMode === 'mock' ? 'Mock grader result' : 'AI grader result'}
+              {' — '}
+              {gradeResult.verdict === 'correct' ? 'Correct' : 'Incorrect'}
+            </h3>
+            <p>{gradeResult.feedback}</p>
+          </section>
+        )}
       </div>
       {conflict && (
         <div className="conflict-backdrop">

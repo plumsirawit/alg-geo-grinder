@@ -8,3 +8,5 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+src/generated/exercisePrompts.json
+lib/**/*.json

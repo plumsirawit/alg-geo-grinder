@@ -700,6 +700,68 @@ hr {
   outline-offset: -2px;
 }
 
+.grading-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--rule);
+  background: rgb(255 255 255 / 28%);
+}
+
+.grading-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.grading-controls .primary-button {
+  margin: 0;
+}
+
+.primary-button:disabled {
+  border-color: #888;
+  background: #999;
+  cursor: not-allowed;
+}
+
+.grading-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.grading-disclosure {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.grading-result {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--link);
+  background: #fff;
+}
+
+.grading-result-correct {
+  border-left-color: #28713c;
+}
+
+.grading-result-incorrect {
+  border-left-color: #a33;
+}
+
+.grading-result h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+
+.grading-result p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .answer-status {
   min-height: 36px;
   display: flex;

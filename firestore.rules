@@ -2,10 +2,25 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Answer documents live at users/{uid}/exercises/{exerciseId}. The parent
-    // user document is intentionally not required or readable by this app.
-    // Each answer contains only exercise metadata, the user's answer, and a
-    // server timestamp; all fields are private to the owning authenticated UID.
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // users/{uid}/exercises/{encodedExerciseId}
+    //   answer: string, required, max 150,000 chars, owner-editable.
+    //   bookId: "hartshorne" | "vakil", immutable.
+    //   chapter: string, 1-20 chars, immutable.
+    //   section: string, 1-40 chars, immutable.
+    //   exerciseLabel: string, 1-100 chars, immutable.
+    //   updatedAt: timestamp, required and server-time on owner edits.
+    //   solved: boolean, server-managed grading state.
+    //   lastVerdict: "correct" | "incorrect", server-managed.
+    //   lastFeedback: string, max 8,000 chars, server-managed.
+    //   lastGradedAt: timestamp, server-managed.
+    //   gradingMode: "mock" | "ai", server-managed.
+    // Grading fields are all-or-none and are written by the Admin SDK
+    // callable only; client rules deny modifications to those fields.
+    // No parent user document or collection queries are used by the app.
+
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -14,8 +29,29 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function uidUnchanged(userId) {
+      return !('uid' in request.resource.data)
+        || request.resource.data.uid == userId;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data)
+        || request.resource.data.uid == resource.data.uid;
+    }
+
     function hasRequiredFields(data) {
       return data.keys().hasAll([
+        'answer',
+        'bookId',
+        'chapter',
+        'section',
+        'exerciseLabel',
+        'updatedAt'
+      ]);
+    }
+
+    function hasOnlyBaseFields(data) {
+      return data.keys().hasOnly([
         'answer',
         'bookId',
         'chapter',
@@ -32,8 +68,38 @@ service cloud.firestore {
         'chapter',
         'section',
         'exerciseLabel',
-        'updatedAt'
+        'updatedAt',
+        'solved',
+        'lastVerdict',
+        'lastFeedback',
+        'lastGradedAt',
+        'gradingMode'
       ]);
+    }
+
+    function hasValidGradingFields(data) {
+      return !data.keys().hasAny([
+        'solved',
+        'lastVerdict',
+        'lastFeedback',
+        'lastGradedAt',
+        'gradingMode'
+      ]) || (
+        data.keys().hasAll([
+          'solved',
+          'lastVerdict',
+          'lastFeedback',
+          'lastGradedAt',
+          'gradingMode'
+        ])
+        && data.solved is bool
+        && data.lastVerdict in ['correct', 'incorrect']
+        && data.solved == (data.lastVerdict == 'correct')
+        && data.lastFeedback is string
+        && data.lastFeedback.size() <= 8000
+        && data.lastGradedAt is timestamp
+        && data.gradingMode in ['mock', 'ai']
+      );
     }
 
     function isValidAnswerDocument(data) {
@@ -52,7 +118,8 @@ service cloud.firestore {
         && data.exerciseLabel.size() > 0
         && data.exerciseLabel.size() <= 100
         && data.updatedAt is timestamp
-        && data.updatedAt == request.time;
+        && data.updatedAt == request.time
+        && hasValidGradingFields(data);
     }
 
     function exerciseIdentityUnchanged() {
@@ -66,11 +133,16 @@ service cloud.firestore {
       allow read: if isOwner(userId);
 
       allow create: if isOwner(userId)
+        && uidUnchanged(userId)
+        && hasOnlyBaseFields(request.resource.data)
         && isValidAnswerDocument(request.resource.data);
 
       allow update: if isOwner(userId)
+        && uidNotModified()
         && isValidAnswerDocument(request.resource.data)
-        && exerciseIdentityUnchanged();
+        && exerciseIdentityUnchanged()
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['answer', 'updatedAt']);
 
       allow delete: if false;
     }

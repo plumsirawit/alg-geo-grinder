@@ -75,11 +75,39 @@ in the current session. If another session has changed it, the user can choose
 the saved version or keep their local version; choosing local performs another
 transactional comparison before overwriting.
 
-Deploy the owner-scoped Firestore rules in `firestore.rules` before using the
-database in a deployed app:
+### Exercise grading
+
+The submit button is enabled only when the non-empty answer has finished saving.
+It calls the authenticated `gradeExercise` callable in `europe-west1` with only
+the exercise ID. The function resolves the prompt from a server-generated
+manifest and reads the saved answer from the caller's own Firestore document.
+It creates an isolated OpenAI Agents API session from the saved grader agent,
+requests a structured verdict and feedback, validates the response, and then
+checks transactionally that the answer did not change before storing the result.
+The per-submission session is deleted after the grading run.
+
+Latest grading state is stored on the answer document as `solved`,
+`lastVerdict`, `lastFeedback`, `lastGradedAt`, and `gradingMode`. Client writes
+cannot change these server-managed fields. The interface tells users that their
+answer and the exercise prompt are sent to OpenAI for grading; AI verdicts may
+be incorrect.
+
+The OpenAI API key must be stored as a Firebase Functions secret, not committed
+or bundled into the frontend. Set it at the secure CLI prompt, then build
+Functions to regenerate the prompt manifest from `src/exercises`:
 
 ```sh
-npx firebase-tools deploy --only firestore:rules
+firebase functions:secrets:set OPENAI_API_KEY
+npm --prefix functions run build
+npm --prefix functions run lint
+```
+
+The grader uses the saved agent ID configured in `functions/src/index.ts`.
+Create an API key with permission to read the saved agent and create agent
+sessions, then deploy the callable and rules:
+
+```sh
+firebase deploy --only functions:gradeExercise,firestore:rules
 ```
 
 The rules allow only authenticated users to access their own answer documents,

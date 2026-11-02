@@ -7,6 +7,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../firebase'
 import type { Exercise } from '../exercises'
+import type { GradeResult } from '../services/gradeExercise'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error'
@@ -74,6 +75,7 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
   const [loadError, setLoadError] = useState('')
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [saveError, setSaveError] = useState('')
+  const [gradeResult, setGradeResult] = useState<GradeResult | null>(null)
   const [conflict, setConflict] = useState<Conflict | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [saveAttempt, setSaveAttempt] = useState(0)
@@ -87,14 +89,25 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
 
     async function loadAnswer() {
       try {
-        const fetchedAnswer = await runTransaction(db, async (transaction) => {
+        const fetchedData = await runTransaction(db, async (transaction) => {
           const snapshot = await transaction.get(reference)
           if (snapshot.exists()) {
             const storedAnswer: unknown = snapshot.data().answer
             if (typeof storedAnswer !== 'string') {
               throw new Error('The saved exercise answer has an invalid format.')
             }
-            return storedAnswer
+            const data = snapshot.data()
+            const verdict = data.lastVerdict
+            const gradingMode = data.gradingMode
+            const feedback = data.lastFeedback
+            const storedGradeResult: GradeResult | null =
+              (verdict === 'correct' || verdict === 'incorrect')
+              && (gradingMode === 'mock' || gradingMode === 'ai')
+              && typeof feedback === 'string'
+              && data.solved === (verdict === 'correct')
+                ? { verdict, gradingMode, feedback }
+                : null
+            return { answer: storedAnswer, gradeResult: storedGradeResult }
           }
 
           transaction.set(reference, {
@@ -105,13 +118,14 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
             exerciseLabel: exercise.label,
             updatedAt: serverTimestamp(),
           })
-          return ''
+          return { answer: '', gradeResult: null }
         })
 
         if (cancelled) return
-        initialReferenceAnswer.current = fetchedAnswer
-        currentAnswer.current = fetchedAnswer
-        setAnswer(fetchedAnswer)
+        initialReferenceAnswer.current = fetchedData.answer
+        currentAnswer.current = fetchedData.answer
+        setAnswer(fetchedData.answer)
+        setGradeResult(fetchedData.gradeResult)
         setLoadStatus('ready')
         setSaveStatus('saved')
       } catch (error) {
@@ -132,9 +146,14 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
   const updateAnswer = useCallback((nextAnswer: string) => {
     currentAnswer.current = nextAnswer
     setAnswer(nextAnswer)
+    setGradeResult(null)
     setIsDirty(true)
     setSaveError('')
     setSaveStatus('pending')
+  }, [])
+
+  const updateGradeResult = useCallback((result: GradeResult) => {
+    setGradeResult(result)
   }, [])
 
   useEffect(() => {
@@ -255,6 +274,7 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
   return {
     answer,
     conflict,
+    gradeResult,
     isDisabled: loadStatus !== 'ready' || conflict !== null,
     loadError,
     loadStatus,
@@ -263,6 +283,7 @@ export function useExerciseAnswer(uid: string, exercise: Exercise) {
     saveError,
     saveStatus,
     updateAnswer,
+    updateGradeResult,
     useRemoteAnswer,
     keepLocalAnswer,
   }
