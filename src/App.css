@@ -599,6 +599,14 @@ hr {
   background: rgb(255 255 255 / 24%);
 }
 
+.exercise-prompt-correct {
+  background: hsla(120, 100%, 50%, 0.4);
+}
+
+.exercise-prompt-incorrect {
+  background: hsla(0, 100%, 50%, 0.4);
+}
+
 .exercise-kicker {
   margin: 0 0 5px;
   color: var(--muted);

@@ -61,7 +61,11 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
 
   return (
     <section className="exercise-workspace" aria-labelledby="exercise-heading">
-      <div className="exercise-prompt">
+      <div
+        className={`exercise-prompt${gradeResult
+          ? ` exercise-prompt-${gradeResult.verdict}`
+          : ''}`}
+      >
         <p className="exercise-kicker">
           Chapter {exercise.chapter} · Section {exercise.section} · Exercise {exercise.label}
         </p>
