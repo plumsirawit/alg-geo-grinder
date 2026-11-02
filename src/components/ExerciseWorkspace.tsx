@@ -82,11 +82,11 @@ function ExerciseWorkspace({ userId, exercise }: ExerciseWorkspaceProps) {
             {' '}<a href="https://virtualmath1.stanford.edu/~vakil/216blog/" rel="noreferrer" target="_blank">
               October 21, 2025 notes
             </a>.
-            {' '}The exercise text is reproduced without modification for noncommercial use
-            under the{' '}
+            {' '}Transcribed from the cited notes for noncommercial use under the{' '}
             <a href="https://creativecommons.org/licenses/by-nc-nd/3.0/" rel="noreferrer" target="_blank">
               CC BY-NC-ND 3.0 License
-            </a>.
+            </a>. Some mathematical notation was re-typeset to correct text-extraction artifacts;
+            no intentional changes were made to the exercise wording.
           </p>
         ) : (
           <p className="exercise-source">
